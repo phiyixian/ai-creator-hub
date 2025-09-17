@@ -22,21 +22,21 @@ export default function CreatePage() {
         <div className="rounded-xl border overflow-hidden">
           <div className="p-4 border-b flex items-center justify-between">
             <div className="font-medium">AI Image Generation</div>
-            <button className="px-3 py-1.5 rounded-md border">Connect AWS</button>
+            <button className="px-3 py-1.5 btn-soft">Connect AWS</button>
           </div>
           <div className="p-4 space-y-3">
             <input
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Prompt for image generation"
-              className="px-3 py-2 rounded-md border w-full"
+              className="input-soft w-full"
             />
             <div className="aspect-video rounded-lg overflow-hidden border">
               <img src={imageUrl} alt="generated" className="w-full h-full object-cover" />
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setImgSeed(prompt)} className="px-3 py-2 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)]">Generate</button>
-              <button className="px-3 py-2 rounded-md border">Download</button>
+              <button onClick={() => setImgSeed(prompt)} className="px-3 py-2 btn-gradient">Generate</button>
+              <button className="px-3 py-2 btn-soft">Download</button>
             </div>
           </div>
         </div>
@@ -54,7 +54,7 @@ export default function CreatePage() {
                   type="number"
                   value={trim.start}
                   onChange={(e) => setTrim((t) => ({ ...t, start: Number(e.target.value) }))}
-                  className="px-3 py-2 rounded-md border w-full"
+                  className="input-soft w-full"
                 />
               </label>
               <label className="text-sm">
@@ -63,14 +63,14 @@ export default function CreatePage() {
                   type="number"
                   value={trim.end}
                   onChange={(e) => setTrim((t) => ({ ...t, end: Number(e.target.value) }))}
-                  className="px-3 py-2 rounded-md border w-full"
+                  className="input-soft w-full"
                 />
               </label>
             </div>
             <div className="flex gap-2">
-              <button className="px-3 py-2 rounded-md border">Apply Trim</button>
-              <button className="px-3 py-2 rounded-md border">Add Captions</button>
-              <button className="px-3 py-2 rounded-md border">Export</button>
+              <button className="px-3 py-2 btn-soft">Apply Trim</button>
+              <button className="px-3 py-2 btn-soft">Add Captions</button>
+              <button className="px-3 py-2 btn-soft">Export</button>
             </div>
           </div>
         </div>
@@ -82,13 +82,13 @@ export default function CreatePage() {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            className="w-full min-h-24 rounded-md border p-3"
+            className="w-full min-h-24 input-soft"
           />
           <div className="flex gap-2">
-            <button onClick={generateScript} className="px-3 py-2 rounded-md bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]">
+            <button onClick={generateScript} className="px-3 py-2 btn-gradient">
               Generate Script
             </button>
-            <button className="px-3 py-2 rounded-md border">Connect AWS</button>
+            <button className="px-3 py-2 btn-soft">Connect AWS</button>
           </div>
           {script && (
             <pre className="whitespace-pre-wrap text-sm bg-[var(--secondary)] p-3 rounded-md border">{script}</pre>

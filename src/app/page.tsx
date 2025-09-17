@@ -53,10 +53,10 @@ export default function Home() {
             performance — powered by AWS AI.
           </p>
           <div className="flex gap-3">
-            <Link href="/inspire" className="px-4 py-2 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)]">
+            <Link href="/inspire" className="px-4 py-2 btn-gradient">
               Get Inspired
             </Link>
-            <Link href="/create" className="px-4 py-2 rounded-md border">
+            <Link href="/create" className="px-4 py-2 btn-soft">
               Start Creating
             </Link>
           </div>
@@ -92,7 +92,7 @@ export default function Home() {
               Link your AWS account to unlock Bedrock models, Lambda workflows, and cloud publishing.
             </p>
           </div>
-          <button className="px-4 py-2 rounded-md bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]">
+          <button className="px-4 py-2 btn-gradient">
             Connect AWS
           </button>
         </div>
