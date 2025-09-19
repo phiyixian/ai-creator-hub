@@ -52,16 +52,16 @@ export default function ReleasePage() {
         <div className="rounded-xl border overflow-hidden lg:col-span-2">
           <div className="p-4 border-b flex items-center justify-between">
             <div className="font-medium">Content feedback</div>
-            <button className="px-3 py-1.5 rounded-md border">Connect AWS</button>
+            <button className="px-3 py-1.5 btn-soft">Connect AWS</button>
           </div>
           <div className="p-4 space-y-3">
             <textarea
               value={feedbackInput}
               onChange={(e) => setFeedbackInput(e.target.value)}
               placeholder="Paste your script, caption, or summary for feedback"
-              className="w-full min-h-32 rounded-md border p-3"
+              className="w-full min-h-32 input-soft"
             />
-            <button onClick={getFeedback} className="px-3 py-2 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)]">Get AI feedback</button>
+            <button onClick={getFeedback} className="px-3 py-2 btn-gradient">Get AI feedback</button>
             {feedback && (
               <pre className="whitespace-pre-wrap text-sm bg-[var(--secondary)] p-3 rounded-md border">{feedback}</pre>
             )}
@@ -74,7 +74,7 @@ export default function ReleasePage() {
           <div className="p-4 space-y-3">
             <label className="text-sm">
               Timezone
-              <select value={tz} onChange={(e) => setTz(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-md border">
+              <select value={tz} onChange={(e) => setTz(e.target.value)} className="mt-1 w-full input-soft">
                 <option value="UTC">UTC</option>
                 <option value="America/Los_Angeles">America/Los_Angeles</option>
                 <option value="America/New_York">America/New_York</option>
@@ -86,7 +86,7 @@ export default function ReleasePage() {
               {bestTimes.map((d, i) => (
                 <div key={i} className="flex items-center justify-between rounded-md border p-2 text-sm">
                   <div>{d.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit" })} • {tz}</div>
-                  <button className="px-2 py-1 rounded-md border">Schedule</button>
+                  <button className="px-2 py-1 btn-soft">Schedule</button>
                 </div>
               ))}
             </div>
@@ -103,11 +103,11 @@ export default function ReleasePage() {
               value={captionPrompt}
               onChange={(e) => setCaptionPrompt(e.target.value)}
               placeholder="Describe the post to generate captions"
-              className="px-3 py-2 rounded-md border w-full"
+              className="input-soft w-full"
             />
             <div className="flex gap-2">
-              <button onClick={generateCaptions} className="px-3 py-2 rounded-md bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]">Generate captions</button>
-              <button className="px-3 py-2 rounded-md border">Connect AWS</button>
+              <button onClick={generateCaptions} className="px-3 py-2 btn-gradient">Generate captions</button>
+              <button className="px-3 py-2 btn-soft">Connect AWS</button>
             </div>
             {!!captions.length && (
               <ul className="list-disc pl-5 text-sm space-y-1">
@@ -137,7 +137,7 @@ export default function ReleasePage() {
             <div className="text-xs text-[var(--muted-foreground)]">
               Selected: {selectedPlatforms.length ? selectedPlatforms.join(", ") : "None"}
             </div>
-            <button className="px-3 py-2 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] w-full">Publish (mock)</button>
+            <button className="px-3 py-2 btn-gradient w-full">Publish (mock)</button>
           </div>
         </div>
       </div>

@@ -66,7 +66,7 @@ export default function InspirePage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search trends..."
-              className="px-3 py-2 rounded-md border w-60 bg-background/70 backdrop-blur-sm focus:ring-2 focus:ring-fuchsia-500/60 focus:border-fuchsia-500/60 transition"
+              className="input-soft w-60"
             />
           </div>
           <div className="grid sm:grid-cols-2 gap-4 p-4">
@@ -92,7 +92,7 @@ export default function InspirePage() {
                   </div>
                   <div className="text-sm text-[var(--muted-foreground)]">{t.growth}% growth this week</div>
                 </div>
-                <button className="px-3 py-1.5 rounded-md border bg-gradient-to-r from-fuchsia-500/10 to-cyan-500/10 hover:from-fuchsia-500/20 hover:to-cyan-500/20 text-foreground transition">
+                <button className="px-3 py-1.5 btn-gradient">
                   Save
                 </button>
               </motion.div>
@@ -106,7 +106,7 @@ export default function InspirePage() {
           <select
             value={persona}
             onChange={(e) => setPersona(e.target.value)}
-            className="px-3 py-2 rounded-md border w-full bg-background/70 backdrop-blur-sm focus:ring-2 focus:ring-cyan-500/60 focus:border-cyan-500/60 transition"
+            className="input-soft w-full"
           >
             <option value="videographer">Videographer</option>
             <option value="photographer">Photographer</option>
@@ -132,7 +132,7 @@ export default function InspirePage() {
               Podcasts
             </label>
           </div>
-          <button className="px-3 py-2 rounded-md w-full border bg-gradient-to-r from-cyan-500/15 via-fuchsia-500/15 to-purple-500/15 hover:from-cyan-500/25 hover:via-fuchsia-500/25 hover:to-purple-500/25 transition">
+          <button className="px-3 py-2 w-full btn-gradient">
             Save preferences
           </button>
         </div>
@@ -145,15 +145,15 @@ export default function InspirePage() {
         <div className="flex flex-wrap items-center gap-3">
           <input
             placeholder="Describe your niche or prompt..."
-            className="px-3 py-2 rounded-md border flex-1 min-w-64 bg-background/70 backdrop-blur-sm focus:ring-2 focus:ring-fuchsia-500/60 focus:border-fuchsia-500/60 transition"
+            className="input-soft flex-1 min-w-64"
           />
           <button
             onClick={suggestTopics}
-            className="px-4 py-2 rounded-md border bg-gradient-to-r from-fuchsia-500/20 to-cyan-500/20 hover:from-fuchsia-500/30 hover:to-cyan-500/30 text-foreground transition shadow-[0_0_20px_-6px_rgba(217,70,239,0.35)]"
+            className="px-4 py-2 btn-gradient"
           >
             AI Topic Suggester
           </button>
-          <button className="px-4 py-2 rounded-md border hover:border-cyan-400/60 hover:shadow-[0_0_18px_-6px_rgba(34,211,238,0.45)] transition">
+          <button className="px-4 py-2 btn-soft">
             Connect AWS
           </button>
         </div>

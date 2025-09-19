@@ -46,7 +46,7 @@ export default function TrackPage() {
       <div className="rounded-xl border overflow-hidden">
         <div className="p-4 border-b font-medium flex items-center justify-between">
           <div>Content calendar</div>
-          <button className="px-3 py-1.5 rounded-md border">Connect AWS</button>
+          <button className="px-3 py-1.5 btn-soft">Connect AWS</button>
         </div>
         <div className="grid grid-cols-7 gap-2 p-4 text-sm">
           {calendar.map((d) => (

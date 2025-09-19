@@ -63,7 +63,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <div className="h-14 flex items-center justify-between px-4">
           <button
             aria-label="Toggle navigation"
-            className="p-2 rounded-md border hover:border-cyan-400/60 hover:shadow-[0_0_18px_-6px_rgba(34,211,238,0.45)] transition"
+            className="p-2 btn-soft"
             onClick={() => setOpen((s) => !s)}
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
