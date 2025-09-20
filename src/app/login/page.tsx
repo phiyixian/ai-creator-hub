@@ -95,6 +95,12 @@ export default function LoginPage() {
             >
               Continue with Google
             </button>
+            <button
+              onClick={() => (window.location.href = "/api/auth/cognito?action=login&returnTo=/dashboard")}
+              className="mt-3 w-full px-4 py-2.5 border rounded-md hover:bg-[var(--accent)] transition text-sm md:text-base"
+            >
+              Continue with Cognito
+            </button>
             <div className="mt-6 text-center text-xs md:text-sm">
               {mode === "login" ? (
                 <span>
