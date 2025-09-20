@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { cookies } from "next/headers";
+import { getSessionByToken, getSocialCredentials } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -8,10 +10,16 @@ export async function POST(req: NextRequest) {
   const { caption, imageUrl } = await req.json().catch(() => ({ caption: "", imageUrl: "" }));
   if (!imageUrl) return new Response(JSON.stringify({ error: "Missing imageUrl" }), { status: 400 });
 
-  const igUserId = process.env.IG_USER_ID;
-  const igToken = process.env.IG_ACCESS_TOKEN;
+  const cookieStore = cookies();
+  const sessionToken = cookieStore.get("session")?.value;
+  const session = sessionToken ? getSessionByToken(sessionToken) : null;
+  const userId = session && Date.now() < session.expiresAt ? session.userId : null;
+  const creds = userId ? getSocialCredentials(userId) : [];
+  const igData = creds.find((c) => c.platform === "instagram")?.data || {};
+  const igUserId = igData.userId || process.env.IG_USER_ID;
+  const igToken = igData.accessToken || process.env.IG_ACCESS_TOKEN;
   if (!igUserId || !igToken) {
-    return Response.json({ ok: false, message: "Set IG_USER_ID and IG_ACCESS_TOKEN" }, { status: 200 });
+    return Response.json({ ok: false, message: "Missing Instagram credentials. Provide via profile settings." }, { status: 200 });
   }
 
   try {
