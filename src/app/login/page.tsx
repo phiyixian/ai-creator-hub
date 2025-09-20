@@ -31,6 +31,9 @@ export default function LoginPage() {
         {error && <div className="text-sm text-red-600">{error}</div>}
         <button className="px-3 py-2 btn-gradient w-full" type="submit">Log in</button>
       </form>
+      <div className="pt-2">
+        <a className="px-3 py-2 btn-gradient w-full inline-flex justify-center" href="/api/auth/cognito/login">Continue with Cognito</a>
+      </div>
     </div>
   );
 }
