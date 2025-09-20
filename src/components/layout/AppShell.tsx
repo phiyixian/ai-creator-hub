@@ -18,6 +18,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  const isAuthRoute = pathname === "/login" || pathname === "/register";
+  if (isAuthRoute) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen grid grid-cols-1 lg:grid-cols-[260px_1fr] overflow-hidden">
       {/* Global neon backdrop (applies Inspire aesthetics app-wide) */}
