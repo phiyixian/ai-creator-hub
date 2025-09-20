@@ -5,12 +5,14 @@ let cachedClient: Client | null = null;
 export async function getOidcClient(): Promise<Client> {
   if (cachedClient) return cachedClient;
   const issuerUrl = process.env.COGNITO_ISSUER as string;
+  const domain = process.env.COGNITO_DOMAIN as string | undefined;
   const clientId = process.env.COGNITO_CLIENT_ID as string;
   const clientSecret = process.env.COGNITO_CLIENT_SECRET as string;
   if (!issuerUrl || !clientId || !clientSecret) {
     throw new Error("Missing Cognito OIDC env vars");
   }
-  const issuer = await Issuer.discover(issuerUrl);
+  const discoveryUrl = domain ? `${domain.replace(/\/$/, "")}/.well-known/openid-configuration` : issuerUrl;
+  const issuer = await Issuer.discover(discoveryUrl);
   cachedClient = new issuer.Client({
     client_id: clientId,
     client_secret: clientSecret,
