@@ -21,6 +21,8 @@ export default function ReleasePage() {
     X: false,
     LinkedIn: false,
   });
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   useEffect(() => {
     fetch("/api/projects")
@@ -52,6 +54,58 @@ export default function ReleasePage() {
   const selectedPlatforms = Object.entries(selected)
     .filter(([, v]) => v)
     .map(([k]) => k as Platform);
+
+  function buildPlatformPreview(platform: Platform, base: string) {
+    const text = base.trim();
+    switch (platform) {
+      case "X": {
+        const limit = 280;
+        let t = text;
+        if (t.length > limit) t = t.slice(0, limit - 1) + "…";
+        return t;
+      }
+      case "Instagram": {
+        return `${text}\n\n#reels #creator #behindthescenes`;
+      }
+      case "TikTok": {
+        return `${text} \n\n#tiktok #fyp #creators`;
+      }
+      case "LinkedIn": {
+        return `${text}\n\nWhat did you learn?`;
+      }
+      case "YouTube": {
+        return `${text} | Full video link in bio.`;
+      }
+      default:
+        return text;
+    }
+  }
+
+  async function publishApproved(platformsToPost: Platform[], finalText: string) {
+    setIsPublishing(true);
+    const results: Record<string, { ok: boolean; url?: string; message?: string }> = {};
+    const base = finalText.trim();
+    for (const p of platformsToPost) {
+      const preview = buildPlatformPreview(p, base);
+      if (p === "X") {
+        try {
+          const res = await fetch("/api/publish/x", { method: "POST", body: JSON.stringify({ text: preview }) });
+          const json = await res.json();
+          results[p] = { ok: !!json.ok, url: json.url, message: json.message };
+        } catch (e: any) {
+          results[p] = { ok: false, message: e?.message || "Failed" };
+        }
+      } else {
+        results[p] = { ok: false, message: "Not yet implemented" };
+      }
+    }
+    setIsPublishing(false);
+    setIsReviewOpen(false);
+    const success = Object.entries(results)
+      .map(([k, v]) => `${k}: ${v.ok ? (v.url || "OK") : (v.message || "Failed")}`)
+      .join("\n");
+    alert(success);
+  }
 
   return (
     <div className="space-y-8">
@@ -206,18 +260,47 @@ export default function ReleasePage() {
             </div>
             <button
               className="px-3 py-2 btn-gradient w-full"
-              onClick={async () => {
-                const text = captions[0] || captionPrompt || "New post";
-                const res = await fetch("/api/publish/x", { method: "POST", body: JSON.stringify({ text }) });
-                const json = await res.json();
-                alert(json?.url ? `Posted: ${json.url}` : (json?.message || "Publish attempted (mock if not configured)."));
-              }}
+              onClick={() => setIsReviewOpen(true)}
             >
-              Publish to X
+              Review & publish
             </button>
           </div>
         </div>
       </div>
+
+      {isReviewOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !isPublishing && setIsReviewOpen(false)} />
+          <div className="relative w-full max-w-2xl rounded-xl border bg-[var(--background)]">
+            <div className="p-4 border-b flex items-center justify-between">
+              <div className="font-medium">Review posts</div>
+              <button className="px-2 py-1 btn-soft" onClick={() => !isPublishing && setIsReviewOpen(false)}>Close</button>
+            </div>
+            <div className="p-4 space-y-4 max-h-[70vh] overflow-auto">
+              {selectedPlatforms.length === 0 ? (
+                <div className="text-sm text-[var(--muted-foreground)]">No platforms selected.</div>
+              ) : (
+                selectedPlatforms.map((p) => (
+                  <div key={p} className="rounded-md border p-3 text-sm">
+                    <div className="mb-2 font-medium">{p}</div>
+                    <pre className="whitespace-pre-wrap">{buildPlatformPreview(p, captions[0] || captionPrompt || "New post")}</pre>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="p-4 border-t flex items-center justify-end gap-2">
+              <button className="px-3 py-2 btn-soft" onClick={() => setIsReviewOpen(false)} disabled={isPublishing}>Cancel</button>
+              <button
+                className="px-3 py-2 btn-gradient"
+                disabled={isPublishing || selectedPlatforms.length === 0}
+                onClick={() => publishApproved(selectedPlatforms, captions[0] || captionPrompt || "New post")}
+              >
+                {isPublishing ? "Publishing…" : "Approve & publish"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
