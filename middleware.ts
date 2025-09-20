@@ -7,7 +7,7 @@ export function middleware(req: NextRequest) {
   const hasSession = req.cookies.get("session");
   if (!hasSession) {
     const url = req.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/api/auth/cognito/login";
     url.searchParams.set("returnTo", pathname);
     return NextResponse.redirect(url);
   }

@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     expires: new Date(session.expiresAt),
   });
 
-  const redirectTo = nonceCookie.returnTo || "/profile";
+  const redirectTo = nonceCookie.returnTo || "/";
   return new Response(null, { status: 302, headers: { Location: redirectTo } });
 }
 
