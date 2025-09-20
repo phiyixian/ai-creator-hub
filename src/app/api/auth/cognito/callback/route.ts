@@ -7,7 +7,7 @@ import { findUserByEmail, createUser, createSession } from "@/lib/db";
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const nonceCookie = parseOidcNonceCookie(cookieStore.get("oidc_nonce")?.value);
   cookieStore.delete("oidc_nonce");
 

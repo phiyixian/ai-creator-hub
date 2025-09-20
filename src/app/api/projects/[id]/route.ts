@@ -2,7 +2,8 @@ import { getDb } from "@/lib/db";
 
 export const runtime = "nodejs";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, ctx: any) {
+  const params = ctx?.params as { id: string };
   const id = Number(params.id);
   if (!id) return new Response(JSON.stringify({ error: "Invalid id" }), { status: 400 });
   const data = await req.json().catch(() => ({} as any));
