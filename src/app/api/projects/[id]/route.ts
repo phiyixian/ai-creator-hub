@@ -1,9 +1,8 @@
-import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 
 export const runtime = "nodejs";
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const id = Number(params.id);
   if (!id) return new Response(JSON.stringify({ error: "Invalid id" }), { status: 400 });
   const data = await req.json().catch(() => ({} as any));

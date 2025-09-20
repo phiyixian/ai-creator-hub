@@ -1,9 +1,9 @@
-import { generators, Issuer, Client, TokenSet } from "openid-client";
+import { discovery, Configuration, randomState, randomPKCECodeVerifier, calculatePKCECodeChallenge } from "openid-client";
 
-let cachedClient: Client | null = null;
+let cachedConfig: Configuration | null = null;
 
-export async function getOidcClient(): Promise<Client> {
-  if (cachedClient) return cachedClient;
+export async function getOidcClient(): Promise<Configuration> {
+  if (cachedConfig) return cachedConfig;
   const issuerUrl = process.env.COGNITO_ISSUER as string;
   const domain = process.env.COGNITO_DOMAIN as string | undefined;
   const clientId = process.env.COGNITO_CLIENT_ID as string;
@@ -11,24 +11,19 @@ export async function getOidcClient(): Promise<Client> {
   if (!issuerUrl || !clientId || !clientSecret) {
     throw new Error("Missing Cognito OIDC env vars");
   }
+  // Supports either an Issuer Identifier (recommended) or a direct discovery URL.
   const discoveryUrl = domain ? `${domain.replace(/\/$/, "")}/.well-known/openid-configuration` : issuerUrl;
-  const issuer = await Issuer.discover(discoveryUrl);
-  cachedClient = new issuer.Client({
-    client_id: clientId,
-    client_secret: clientSecret,
-    redirect_uris: [process.env.COGNITO_REDIRECT_URI as string],
-    response_types: ["code"],
-  });
-  return cachedClient;
+  cachedConfig = await discovery(new URL(discoveryUrl), clientId, clientSecret);
+  return cachedConfig;
 }
 
 export function generateState(): string {
-  return generators.state();
+  return randomState();
 }
 
-export function generatePkce(): { codeVerifier: string; codeChallenge: string } {
-  const codeVerifier = generators.codeVerifier();
-  const codeChallenge = generators.codeChallenge(codeVerifier);
+export async function generatePkce(): Promise<{ codeVerifier: string; codeChallenge: string }> {
+  const codeVerifier = randomPKCECodeVerifier();
+  const codeChallenge = await calculatePKCECodeChallenge(codeVerifier);
   return { codeVerifier, codeChallenge };
 }
 
@@ -54,15 +49,5 @@ export function parseOidcNonceCookie(value: string | undefined | null): OidcSess
 
 export function getRedirectUri(): string {
   return process.env.COGNITO_REDIRECT_URI as string;
-}
-
-export async function exchangeCode(params: {
-  client: Client;
-  code: string;
-  codeVerifier: string;
-}): Promise<TokenSet> {
-  const { client, code, codeVerifier } = params;
-  const tokens = await client.callback(getRedirectUri(), { code }, { code_verifier: codeVerifier });
-  return tokens;
 }
 

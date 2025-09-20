@@ -1,13 +1,14 @@
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
-import { getOidcClient, generateState, generatePkce, serializeOidcNonceCookie } from "@/lib/oidc";
+import { buildAuthorizationUrl } from "openid-client";
+import { getOidcClient, generateState, generatePkce, serializeOidcNonceCookie, getRedirectUri } from "@/lib/oidc";
 
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  const client = await getOidcClient();
+  const config = await getOidcClient();
   const state = generateState();
-  const { codeVerifier, codeChallenge } = generatePkce();
+  const { codeVerifier, codeChallenge } = await generatePkce();
   const returnTo = req.nextUrl.searchParams.get("returnTo");
 
   const cookieStore = cookies();
@@ -19,13 +20,14 @@ export async function GET(req: NextRequest) {
     maxAge: 60 * 10,
   });
 
-  const url = client.authorizationUrl({
+  const redirectTo = buildAuthorizationUrl(config, {
+    redirect_uri: getRedirectUri(),
     scope: "openid email phone profile",
     state,
     code_challenge: codeChallenge,
     code_challenge_method: "S256",
   });
 
-  return new Response(null, { status: 302, headers: { Location: url } });
+  return new Response(null, { status: 302, headers: { Location: redirectTo.toString() } });
 }
 

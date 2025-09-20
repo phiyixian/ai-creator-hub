@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
-import { getOidcClient, parseOidcNonceCookie, exchangeCode } from "@/lib/oidc";
+import { getOidcClient, parseOidcNonceCookie } from "@/lib/oidc";
+import { authorizationCodeGrant } from "openid-client";
 import { findUserByEmail, createUser, createSession } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -20,8 +21,15 @@ export async function GET(req: NextRequest) {
     return new Response("Invalid state", { status: 400 });
   }
 
-  const client = await getOidcClient();
-  const tokens = await exchangeCode({ client, code, codeVerifier: nonceCookie.codeVerifier });
+  const config = await getOidcClient();
+  const tokens = await authorizationCodeGrant(
+    config,
+    new URL(req.url),
+    {
+      pkceCodeVerifier: nonceCookie.codeVerifier,
+      expectedState: state,
+    },
+  );
 
   const idToken = tokens.claims();
   const email = (idToken.email as string) || "";
