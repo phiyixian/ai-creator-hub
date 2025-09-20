@@ -21,8 +21,7 @@ export default function CreatePage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border overflow-hidden">
           <div className="p-4 border-b flex items-center justify-between">
-            <div className="font-medium">AI Image Generation</div>
-            <button className="px-3 py-1.5 btn-soft">Connect AWS</button>
+            <div className="font-medium text-base md:text-lg">AI Image Generation</div>
           </div>
           <div className="p-4 space-y-3">
             <input
@@ -42,7 +41,7 @@ export default function CreatePage() {
         </div>
 
         <div className="rounded-xl border overflow-hidden">
-          <div className="p-4 border-b font-medium">Video Editing (Placeholder)</div>
+          <div className="p-4 border-b font-medium text-base md:text-lg">Video Editing (Placeholder)</div>
           <div className="p-4 space-y-3">
             <div className="aspect-video rounded-lg overflow-hidden border bg-[var(--secondary)] grid place-items-center text-sm text-[var(--muted-foreground)]">
               Drop or select a clip
@@ -77,7 +76,7 @@ export default function CreatePage() {
       </div>
 
       <div className="rounded-xl border overflow-hidden">
-        <div className="p-4 border-b font-medium">Script & Storyboard from Prompt</div>
+        <div className="p-4 border-b font-medium text-base md:text-lg">Script & Storyboard from Prompt</div>
         <div className="p-4 space-y-3">
           <textarea
             value={prompt}
@@ -88,7 +87,6 @@ export default function CreatePage() {
             <button onClick={generateScript} className="px-3 py-2 btn-gradient">
               Generate Script
             </button>
-            <button className="px-3 py-2 btn-soft">Connect AWS</button>
           </div>
           {script && (
             <pre className="whitespace-pre-wrap text-sm bg-[var(--secondary)] p-3 rounded-md border">{script}</pre>

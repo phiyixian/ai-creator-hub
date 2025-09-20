@@ -241,6 +241,7 @@ export default function TrackPage() {
             <MetricCard label="Total Reach" value={totalReach} />
           </div>
 
+<<<<<<< HEAD
           
 
           {/* Growth Trend Chart with Metric Selector */}
@@ -259,6 +260,20 @@ export default function TrackPage() {
                 <option value="reach">Reach</option>
                 <option value="saves">Saves</option>
               </select>
+=======
+      {/* Calendar */}
+      <div className="rounded-xl border overflow-hidden">
+        <div className="p-4 border-b font-medium flex items-center justify-between">
+          <div className="text-base md:text-lg">Content calendar</div>
+        </div>
+        <div className="grid grid-cols-7 gap-2 p-4 text-sm">
+          {calendar.map((d) => (
+            <div key={d} className="rounded-lg border p-2 min-h-20">
+              <div className="text-[10px] text-[var(--muted-foreground)]">{d}</div>
+              {d % 5 === 0 && (
+                <div className="mt-1 px-2 py-1 rounded-md bg-[var(--sidebar-primary)]/10 text-[var(--sidebar-primary)]">Post</div>
+              )}
+>>>>>>> 01ee255fffefda50537dd42f016164f1556eb17a
             </div>
             {/* Date filter controls */}
               <div style={{ marginBottom: 16 , marginTop: 16}}>

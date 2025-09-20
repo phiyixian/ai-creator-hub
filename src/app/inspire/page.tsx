@@ -46,19 +46,19 @@ export default function InspirePage() {
           <div className="absolute -bottom-10 right-1/4 h-40 w-40 rounded-full bg-cyan-500/30 blur-3xl" />
         </div>
         <div className="relative p-6 lg:p-8">
-          <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">
+          <h1 className="page-title">
             <span className="bg-gradient-to-r from-fuchsia-400 via-cyan-300 to-purple-300 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(255,0,255,0.25)]">
               Inspire
             </span>
           </h1>
-          <p className="mt-2 text-sm text-[var(--muted-foreground)]">Discover trends, spark ideas, and tailor inspiration to your creator persona.</p>
+          <p className="mt-2 text-sm md:text-base text-[var(--muted-foreground)]">Discover trends, spark ideas, and tailor inspiration to your creator persona.</p>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 rounded-xl border overflow-hidden bg-gradient-to-b from-transparent to-[var(--card)]">
           <div className="p-4 border-b flex items-center justify-between bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]">
-            <div className="font-medium flex items-center gap-2">
+            <div className="font-medium flex items-center gap-2 text-base md:text-lg">
               <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_12px_2px_rgba(34,211,238,0.6)]" />
               Trend discovery
             </div>
@@ -66,7 +66,7 @@ export default function InspirePage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search trends..."
-              className="input-soft w-60"
+              className="input-soft w-52 md:w-60"
             />
           </div>
           <div className="grid sm:grid-cols-2 gap-4 p-4">
@@ -92,7 +92,7 @@ export default function InspirePage() {
                   </div>
                   <div className="text-sm text-[var(--muted-foreground)]">{t.growth}% growth this week</div>
                 </div>
-                <button className="px-3 py-1.5 btn-gradient">
+                <button className="px-3 py-1.5 btn-gradient text-sm">
                   Save
                 </button>
               </motion.div>
@@ -100,7 +100,7 @@ export default function InspirePage() {
           </div>
         </div>
         <div className="rounded-xl border p-4 space-y-4 bg-[var(--card)] relative overflow-hidden">
-          <div className="pointer-events-none absolute -top-8 -right-8 h-24 w-24 rounded-full bg-fuchsia-500/20 blur-2xl" />
+          <div className="pointer-events-none absolute -top-8 -right-8 h-24 w-24 rounded-full bg-fuchsia-500/20 blur-2xl z-0" />
           <div className="font-medium">Creator customization</div>
           <label className="text-sm">Persona</label>
           <select
@@ -153,7 +153,7 @@ export default function InspirePage() {
           >
             AI Topic Suggester
           </button>
-          <button className="px-4 py-2 btn-soft">
+          <button className="px-4 py-2 btn-soft text-sm md:text-base">
             Connect AWS
           </button>
         </div>
