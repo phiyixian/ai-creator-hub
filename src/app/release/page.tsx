@@ -1,11 +1,14 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const platforms = ["YouTube", "TikTok", "Instagram", "X", "LinkedIn"] as const;
 
 type Platform = typeof platforms[number];
 
 export default function ReleasePage() {
+  const [projects, setProjects] = useState<Array<{ id: number; title: string; contentUrl?: string | null; coverUrl?: string | null }>>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [feedbackInput, setFeedbackInput] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [tz, setTz] = useState("UTC");
@@ -19,27 +22,32 @@ export default function ReleasePage() {
     LinkedIn: false,
   });
 
-  function getFeedback() {
-    const score = Math.min(100, 60 + feedbackInput.length % 40);
-    setFeedback(
-      `Overall: ${score}/100\nStrengths: clear hook, niche-relevant.\nSuggestions: tighten intro, add captions, insert CTA at 90s.\nAWS Bedrock could refine tone and extract highlights automatically.`
-    );
-  }
-
-  function generateCaptions() {
-    const base = captionPrompt || "New video";
-    setCaptions([
-      `${base} ✨ | Shot on a budget, powered by AI #CreatorFlow`,
-      `From prompt to post: ${base}. Full process inside.`,
-      `${base} — what do you think? #filmmaking #AI`,
-    ]);
-  }
-
-  const bestTimes = useMemo(() => {
-    const now = new Date();
-    const hours = [9, 12, 18, 21];
-    return hours.map((h) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + (h % 2), h, 0, 0));
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then((d) => setProjects(d.projects || []))
+      .catch(() => {});
   }, []);
+
+  async function getFeedback() {
+    const res = await fetch("/api/ai/feedback", { method: "POST", body: JSON.stringify({ content: feedbackInput }) });
+    const json = await res.json();
+    setFeedback(String(json.feedback || ""));
+  }
+
+  async function generateCaptions() {
+    const res = await fetch("/api/ai/captions", { method: "POST", body: JSON.stringify({ prompt: captionPrompt }) });
+    const json = await res.json();
+    setCaptions(Array.isArray(json.captions) ? json.captions : []);
+  }
+
+  const [bestTimes, setBestTimes] = useState<Date[]>([]);
+  useEffect(() => {
+    fetch("/api/ai/best-time", { method: "POST", body: JSON.stringify({ timezone: tz }) })
+      .then((r) => r.json())
+      .then((d) => setBestTimes((d.times || []).map((s: string) => new Date(s))))
+      .catch(() => {});
+  }, [tz]);
 
   const selectedPlatforms = Object.entries(selected)
     .filter(([, v]) => v)
@@ -47,6 +55,65 @@ export default function ReleasePage() {
 
   return (
     <div className="space-y-8">
+      {/* Project selector & uploader */}
+      <div className="rounded-xl border overflow-hidden">
+        <div className="p-4 border-b font-medium flex items-center justify-between">
+          <div>Project</div>
+          <button
+            className="px-3 py-1.5 btn-soft"
+            onClick={async () => {
+              const title = prompt("Project title?") || "Untitled";
+              const res = await fetch("/api/projects", { method: "POST", body: JSON.stringify({ title }) });
+              const json = await res.json();
+              setProjects((p) => [json.project, ...p]);
+              setSelectedProjectId(json.project.id);
+            }}
+          >
+            New project
+          </button>
+        </div>
+        <div className="p-4 space-y-3">
+          <select
+            className="input-soft w-full"
+            value={selectedProjectId ?? ""}
+            onChange={(e) => setSelectedProjectId(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">Select a project…</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title}
+              </option>
+            ))}
+          </select>
+          <div className="flex items-center gap-3">
+            <input
+              type="file"
+              accept="image/*,video/*"
+              onChange={async (e) => {
+                if (!e.target.files?.[0]) return;
+                setIsUploading(true);
+                try {
+                  const fd = new FormData();
+                  fd.append("file", e.target.files[0]);
+                  const up = await fetch("/api/upload", { method: "POST", body: fd });
+                  const { url } = await up.json();
+                  if (selectedProjectId) {
+                    await fetch(`/api/projects/${selectedProjectId}`, {
+                      method: "PATCH",
+                      body: JSON.stringify({ contentUrl: url }),
+                    });
+                    const refreshed = await fetch("/api/projects").then((r) => r.json());
+                    setProjects(refreshed.projects || []);
+                  }
+                } finally {
+                  setIsUploading(false);
+                }
+              }}
+            />
+            {isUploading && <div className="text-xs text-[var(--muted-foreground)]">Uploading…</div>}
+          </div>
+        </div>
+      </div>
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Feedback */}
         <div className="rounded-xl border overflow-hidden lg:col-span-2">
@@ -137,7 +204,17 @@ export default function ReleasePage() {
             <div className="text-xs text-[var(--muted-foreground)]">
               Selected: {selectedPlatforms.length ? selectedPlatforms.join(", ") : "None"}
             </div>
-            <button className="px-3 py-2 btn-gradient w-full">Publish (mock)</button>
+            <button
+              className="px-3 py-2 btn-gradient w-full"
+              onClick={async () => {
+                const text = captions[0] || captionPrompt || "New post";
+                const res = await fetch("/api/publish/x", { method: "POST", body: JSON.stringify({ text }) });
+                const json = await res.json();
+                alert(json?.url ? `Posted: ${json.url}` : (json?.message || "Publish attempted (mock if not configured)."));
+              }}
+            >
+              Publish to X
+            </button>
           </div>
         </div>
       </div>
