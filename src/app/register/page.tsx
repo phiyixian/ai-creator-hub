@@ -27,7 +27,7 @@ export default function RegisterPage() {
 
   return (
     <div className="max-w-md mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Create account</h1>
+      <h1 className="page-title">Create account</h1>
       <form onSubmit={submit} className="space-y-3">
         <input className="input-soft w-full" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
         <input className="input-soft w-full" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />

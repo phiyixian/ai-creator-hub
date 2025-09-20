@@ -109,7 +109,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* Main area */}
       <div className="min-h-screen flex flex-col">
         <header className="hidden lg:flex h-16 items-center justify-between px-6 border-b bg-background/80 backdrop-blur">
-          <div className="text-sm text-[var(--muted-foreground)]">
+          <div className="text-sm md:text-base text-[var(--muted-foreground)]">
             Empowering digital creators with AWS AI
           </div>
           <div className="flex items-center gap-2 text-sm">
@@ -120,7 +120,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </header>
         <main className="flex-1 px-4 py-6 lg:p-8">
           {/* Apply subtle panel gradient similar to Inspire */}
-          <div className="rounded-xl border bg-gradient-to-br from-fuchsia-500/5 via-cyan-500/5 to-purple-500/5">
+          <div className="rounded-xl border bg-gradient-to-br from-fuchsia-500/5 via-cyan-500/5 to-purple-500/5 relative">
+            <div className="pointer-events-none absolute inset-0 -z-10" />
             <div className="p-1">
               {children}
             </div>

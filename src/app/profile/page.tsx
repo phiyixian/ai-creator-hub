@@ -39,7 +39,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-8">
       <div className="rounded-xl border overflow-hidden">
-        <div className="p-4 border-b font-medium">Creator profile</div>
+        <div className="p-4 border-b font-medium text-base md:text-lg">Creator profile</div>
         <div className="p-4 grid gap-4 sm:grid-cols-2">
           <label className="text-sm">
             Name
@@ -67,19 +67,39 @@ export default function ProfilePage() {
       </div>
 
       <div className="rounded-xl border overflow-hidden">
-        <div className="p-4 border-b font-medium flex items-center justify-between">
-          <div>AWS connection</div>
-          <button className="px-3 py-1.5 rounded-md border">Docs</button>
-        </div>
-        <div className="p-4 space-y-3">
-          <p className="text-sm text-[var(--muted-foreground)] max-w-prose">
-            Connect your AWS account to enable Bedrock model inference, Lambda automations, and multi-platform publishing via API Gateways.
-          </p>
-          <div className="flex gap-2">
-            <button className="px-3 py-2 btn-gradient">Connect AWS</button>
-            <button className="px-3 py-2 btn-soft">Test connection</button>
+        <div className="p-4 border-b font-medium text-base md:text-lg">Social platform connections</div>
+        <div className="p-4 grid gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <div className="font-medium">LinkedIn</div>
+            <button onClick={() => window.open('/api/oauth/linkedin', '_blank', 'width=500,height=650')} className="px-3 py-2 btn-gradient text-sm">Link LinkedIn</button>
+            <div className="text-[var(--muted-foreground)] text-xs">Used for posting to LinkedIn.</div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="font-medium">X (Twitter)</div>
+            <button onClick={() => window.open('/api/oauth/x', '_blank', 'width=500,height=650')} className="px-3 py-2 btn-gradient text-sm">Link X</button>
+            <div className="text-[var(--muted-foreground)] text-xs">Used for posting to X.</div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="font-medium">Instagram</div>
+            <button onClick={() => window.open('/api/oauth/instagram', '_blank', 'width=500,height=650')} className="px-3 py-2 btn-gradient text-sm">Link Instagram</button>
+            <div className="text-[var(--muted-foreground)] text-xs">Used for posting to Instagram.</div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="font-medium">YouTube</div>
+            <button onClick={() => window.open('/api/oauth/youtube', '_blank', 'width=500,height=650')} className="px-3 py-2 btn-gradient text-sm">Link YouTube</button>
+            <div className="text-[var(--muted-foreground)] text-xs">Used for uploading to YouTube.</div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="font-medium">TikTok</div>
+            <button onClick={() => window.open('/api/oauth/tiktok', '_blank', 'width=500,height=650')} className="px-3 py-2 btn-gradient text-sm">Link TikTok</button>
+            <div className="text-[var(--muted-foreground)] text-xs">TikTok requires OAuth upload sessions.</div>
           </div>
         </div>
+        <div className="p-4 text-xs text-[var(--muted-foreground)]">{status}</div>
       </div>
 
       <div className="rounded-xl border overflow-hidden">

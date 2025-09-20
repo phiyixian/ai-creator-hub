@@ -44,10 +44,10 @@ export default function Home() {
     <div className="space-y-10">
       <section className="grid gap-6 lg:grid-cols-2 items-center">
         <div className="space-y-4">
-          <h1 className="text-3xl lg:text-5xl font-semibold tracking-tight">
+          <h1 className="page-title">
             CreatorFlow AI
           </h1>
-          <p className="text-[var(--muted-foreground)] max-w-prose">
+          <p className="text-[var(--muted-foreground)] max-w-prose text-sm md:text-base leading-relaxed">
             A unified workspace for digital creators. Discover what to make,
             generate assets with AI, release at the right time, and track
             performance — powered by AWS AI.
@@ -77,26 +77,14 @@ export default function Home() {
               <img src={c.img} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
             </div>
             <div className="p-4">
-              <div className="font-medium text-lg">{c.title}</div>
-              <p className="text-sm text-[var(--muted-foreground)]">{c.desc}</p>
+              <div className="font-medium text-base md:text-lg">{c.title}</div>
+              <p className="text-sm md:text-base text-[var(--muted-foreground)]">{c.desc}</p>
             </div>
           </Link>
         ))}
       </section>
 
-      <section className="rounded-xl border p-6 bg-[var(--card)]">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="font-medium text-lg">Connect to AWS</div>
-            <p className="text-sm text-[var(--muted-foreground)] max-w-prose">
-              Link your AWS account to unlock Bedrock models, Lambda workflows, and cloud publishing.
-            </p>
-          </div>
-          <button className="px-4 py-2 btn-gradient">
-            Connect AWS
-          </button>
-        </div>
-      </section>
+      
     </div>
   );
 }
