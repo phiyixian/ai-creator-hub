@@ -1,32 +1,91 @@
+// src/app/api/profile/credentials/route.ts
 import { cookies } from "next/headers";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSessionByToken, getSocialCredentials, upsertSocialCredential } from "@/lib/db";
 
 export const runtime = "nodejs";
 
-function requireUserId() {
-  const cookieStore = cookies();
+const DEBUG_PROFILE = process.env.DEBUG_PROFILE === "1";
+
+const ALLOWED_PLATFORMS = new Set([
+  "cognito",
+  "google",
+  "linkedin",
+  "x", // prefer "x" over "twitter"
+  "instagram",
+  "youtube",
+  "tiktok",
+]);
+
+function normalizePlatform(input: string): string {
+  const p = String(input || "").trim().toLowerCase();
+  if (p === "twitter") return "x";
+  return p;
+}
+
+async function requireUserId(): Promise<number | null> {
+  const cookieStore = await cookies();
   const token = cookieStore.get("session")?.value;
   if (!token) return null;
-  const session = getSessionByToken(token);
+
+  const session = await Promise.resolve(getSessionByToken(token));
   if (!session) return null;
   if (Date.now() > session.expiresAt) return null;
-  return session.userId;
+
+  return session.userId as number;
+}
+
+// ✅ FIXED: only ever pass ResponseInit into NextResponse.json
+function json(data: any, init?: number | ResponseInit) {
+  const res =
+    typeof init === "number"
+      ? NextResponse.json(data, { status: init })
+      : NextResponse.json(data, init);
+  res.headers.set("Cache-Control", "no-store");
+  return res;
 }
 
 export async function GET() {
-  const userId = requireUserId();
-  if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-  const creds = getSocialCredentials(userId).map((c) => ({ platform: c.platform, data: c.data }));
-  return Response.json({ credentials: creds });
+  const userId = await requireUserId();
+  if (userId == null) return json({ error: "Unauthorized" }, { status: 401 });
+
+  const creds = await Promise.resolve(getSocialCredentials(userId));
+  const payload = (creds || []).map((c: any) => ({ platform: c.platform, data: c.data }));
+
+  if (DEBUG_PROFILE) {
+    console.log("[profile/credentials] GET", { userId, count: payload.length });
+  }
+
+  return json({ credentials: payload });
 }
 
 export async function POST(req: NextRequest) {
-  const userId = requireUserId();
-  if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-  const { platform, data } = await req.json().catch(() => ({ platform: "", data: {} }));
-  if (!platform) return new Response(JSON.stringify({ error: "Missing platform" }), { status: 400 });
-  const c = upsertSocialCredential(userId, platform, data || {});
-  return Response.json({ ok: true, platform: c.platform });
-}
+  const userId = await requireUserId();
+  if (userId == null) return json({ error: "Unauthorized" }, { status: 401 });
 
+  let body: any = null;
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const platformRaw = body?.platform;
+  const platform = normalizePlatform(platformRaw);
+  const data = (body?.data ?? {}) as Record<string, unknown>;
+
+  if (!platform) return json({ error: "Missing 'platform' (string)" }, { status: 400 });
+  if (!ALLOWED_PLATFORMS.has(platform)) {
+    return json({ error: `Unsupported platform '${platformRaw}'` }, { status: 400 });
+  }
+  if (typeof data !== "object" || Array.isArray(data)) {
+    return json({ error: "'data' must be an object" }, { status: 400 });
+  }
+
+  if (DEBUG_PROFILE) {
+    console.log("[profile/credentials] POST upsert", { userId, platform, keys: Object.keys(data) });
+  }
+
+  const c = await Promise.resolve(upsertSocialCredential(userId, platform, data));
+  return json({ ok: true, platform: c.platform });
+}

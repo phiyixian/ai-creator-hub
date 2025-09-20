@@ -1,31 +1,24 @@
-import { NextRequest } from "next/server";
+// src/app/api/auth/cognito/login/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getOidcClient, generateState, generatePkce, serializeOidcNonceCookie } from "@/lib/oidc";
+import { buildAuthUrl, serializeOidcNonceCookie } from "@/lib/oidc";
 
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  const client = await getOidcClient();
-  const state = generateState();
-  const { codeVerifier, codeChallenge } = generatePkce();
-  const returnTo = req.nextUrl.searchParams.get("returnTo");
+  const returnTo = req.nextUrl.searchParams.get("returnTo") || "/";
+  const { url, nonce } = await buildAuthUrl({ returnTo: req.nextUrl.searchParams.get("returnTo") || "/" });
+console.log("[oidc/login] authorize url:", new URL(url).origin + new URL(url).pathname); // hides query
+console.log("[oidc/login] params:", Object.fromEntries(new URL(url).searchParams)); // state, scope, redirect_uri, etc.
 
-  const cookieStore = cookies();
-  cookieStore.set("oidc_nonce", serializeOidcNonceCookie({ state, codeVerifier, returnTo }), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 10,
-  });
 
-  const url = client.authorizationUrl({
-    scope: "openid email phone profile",
-    state,
-    code_challenge: codeChallenge,
-    code_challenge_method: "S256",
-  });
+  (await cookies()).set("oidc_nonce", serializeOidcNonceCookie(nonce), {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production", // false on localhost is fine
+  path: "/",
+  maxAge: 600,
+});
+return NextResponse.redirect(url, 302);
 
-  return new Response(null, { status: 302, headers: { Location: url } });
 }
-

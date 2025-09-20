@@ -1,36 +1,108 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-const mockTrends = [
-  { tag: "#AIshorts", growth: 128, category: "tech" },
-  { tag: "#StudioVlog", growth: 74, category: "creator" },
-  { tag: "#MorningRoutine", growth: 45, category: "lifestyle" },
-  { tag: "#Unboxing", growth: 32, category: "products" },
-  { tag: "#TinyDesk", growth: 58, category: "music" },
-];
+type TrendData = {
+  tag: string;
+  growth: number;
+  category: string;
+  description?: string;
+  imageUrl?: string;
+  source?: string;
+  timestamp?: string;
+};
+
+type TopicSuggestion = {
+  title: string;
+  description: string;
+  category: string;
+  difficulty: "beginner" | "intermediate" | "advanced";
+  estimatedTime: string;
+  platforms: string[];
+  tags: string[];
+  engagement: "high" | "medium" | "low";
+  source?: string;
+  timestamp?: string;
+};
 
 export default function InspirePage() {
   const [query, setQuery] = useState("");
   const [persona, setPersona] = useState("videographer");
-  const [topics, setTopics] = useState<string[]>([]);
+  const [topics, setTopics] = useState<TopicSuggestion[]>([]);
+  const [trends, setTrends] = useState<TrendData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [topic, setTopic] = useState(""); // <-- NEW
+
+  // Fetch trends data
+  useEffect(() => {
+    fetchTrends();
+  }, [query]);
+
+  const fetchTrends = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (query) params.set("q", query);
+      params.set("limit", "10");
+      
+      const response = await fetch(`/api/ai/trends?${params}`);
+      const data = await response.json();
+      
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setTrends(data.trends || []);
+      }
+    } catch (err) {
+      setError("Failed to fetch trends");
+      console.error("Error fetching trends:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
-    return mockTrends.filter((t) => t.tag.toLowerCase().includes(q));
-  }, [query]);
+    return trends.filter((t) => t.tag.toLowerCase().includes(q));
+  }, [query, trends]);
 
-  function suggestTopics() {
-    const seed = `${persona}-${query || "general"}`;
-    const base = [
-      `Behind the scenes of ${persona}`,
-      `Top 5 tips for ${persona}s`,
-      `How I plan a ${persona} project`,
-      `Budget gear for ${persona}s`,
-      `Mistakes to avoid as a ${persona}`,
-    ];
-    setTopics(base.map((b) => `${b} • ${seed}`));
+  async function suggestTopics() {
+  setLoading(true);
+  setError(null);
+  try {
+    const payload = {
+      persona,
+      query: (topic || "").trim() || undefined, // <-- use TOPIC here
+      preferences: { contentTypes: ["short-form", "long-form"] },
+      count: 5,
+    };
+
+    // (optional) debug in browser console
+    console.log("[client] /api/ai/topics payload:", payload);
+
+    const response = await fetch("/api/ai/topics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    console.log("[client] /api/ai/topics response:", data); // optional debug
+
+    if (data.error) {
+      setError(typeof data.error === "string" ? data.error : JSON.stringify(data.error));
+    } else {
+      setTopics(data.suggestions || []);
+    }
+  } catch (err) {
+    setError("Failed to generate topics");
+    console.error("Error generating topics:", err);
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <motion.div
@@ -70,33 +142,66 @@ export default function InspirePage() {
             />
           </div>
           <div className="grid sm:grid-cols-2 gap-4 p-4">
-            {filtered.map((t, idx) => (
-              <motion.div
-                key={t.tag}
-                className="group rounded-lg border p-4 flex items-center gap-3 bg-background/60 backdrop-blur-sm hover:border-cyan-400/60 transition shadow-[0_0_0_0_rgba(0,0,0,0)] hover:shadow-[0_0_24px_-4px_rgba(34,211,238,0.35)]"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.02 * idx, duration: 0.35 }}
-                whileHover={{ y: -2 }}
-              >
-                <img
-                  src={`https://source.unsplash.com/featured/320x180?${t.category}`}
-                  alt={t.category}
-                  className="w-28 h-16 object-cover rounded-md"
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="flex-1">
-                  <div className="font-medium tracking-tight group-hover:text-cyan-300 transition">
-                    {t.tag}
-                  </div>
-                  <div className="text-sm text-[var(--muted-foreground)]">{t.growth}% growth this week</div>
-                </div>
-                <button className="px-3 py-1.5 btn-gradient text-sm">
-                  Save
+            {loading ? (
+              <div className="col-span-2 flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+                <span className="ml-2 text-sm text-[var(--muted-foreground)]">Loading trends...</span>
+              </div>
+            ) : error ? (
+              <div className="col-span-2 text-center py-8">
+                <div className="text-red-400 text-sm">{error}</div>
+                <button 
+                  onClick={fetchTrends}
+                  className="mt-2 px-3 py-1.5 btn-soft text-sm"
+                >
+                  Retry
                 </button>
-              </motion.div>
-            ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="col-span-2 text-center py-8 text-[var(--muted-foreground)]">
+                No trends found. Try a different search term.
+              </div>
+            ) : (
+              filtered.map((t, idx) => (
+                <motion.div
+                  key={t.tag}
+                  className="group rounded-lg border p-4 flex items-center gap-3 bg-background/60 backdrop-blur-sm hover:border-cyan-400/60 transition shadow-[0_0_0_0_rgba(0,0,0,0)] hover:shadow-[0_0_24px_-4px_rgba(34,211,238,0.35)]"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.02 * idx, duration: 0.35 }}
+                  whileHover={{ y: -2 }}
+                >
+                  <img
+                    src={t.imageUrl || `https://source.unsplash.com/featured/320x180?${t.category}`}
+                    alt={t.category}
+                    className="w-28 h-16 object-cover rounded-md"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium tracking-tight group-hover:text-cyan-300 transition">
+                      {t.tag}
+                    </div>
+                    <div className="text-sm text-[var(--muted-foreground)]">
+                      {t.growth}% growth this week
+                    </div>
+                    {t.description && (
+                      <div className="text-xs text-[var(--muted-foreground)] mt-1">
+                        {t.description}
+                      </div>
+                    )}
+                    {t.source && (
+                      <div className="text-xs text-cyan-400 mt-1">
+                        Powered by {t.source}
+                      </div>
+                    )}
+                  </div>
+                  <button className="px-3 py-1.5 btn-gradient text-sm">
+                    Save
+                  </button>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
         <div className="rounded-xl border p-4 space-y-4 bg-[var(--card)] relative overflow-hidden">
@@ -144,30 +249,66 @@ export default function InspirePage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <input
-            placeholder="Describe your niche or prompt..."
-            className="input-soft flex-1 min-w-64"
-          />
+  placeholder="Describe your niche or prompt..."
+  className="input-soft flex-1 min-w-64"
+  value={topic}                    // <-- bind
+  onChange={(e) => setTopic(e.target.value)}  // <-- bind
+/>
           <button
             onClick={suggestTopics}
-            className="px-4 py-2 btn-gradient"
+            disabled={loading}
+            className="px-4 py-2 btn-gradient disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            AI Topic Suggester
+            {loading ? "Generating..." : "AI Topic Suggester"}
           </button>
           <button className="px-4 py-2 btn-soft text-sm md:text-base">
             Connect AWS
           </button>
         </div>
+        {error && (
+          <div className="mt-4 p-3 rounded-lg border border-red-400/30 bg-red-400/10 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
         {!!topics.length && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-            {topics.map((t, i) => (
+            {topics.map((topic, i) => (
               <motion.div
                 key={i}
-                className="rounded-lg border p-3 text-sm bg-background/60 backdrop-blur-sm hover:border-fuchsia-400/60 transition"
+                className="rounded-lg border p-4 bg-background/60 backdrop-blur-sm hover:border-fuchsia-400/60 transition"
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.02 * i, duration: 0.3 }}
               >
-                {t}
+                <div className="space-y-2">
+                  <div className="font-medium text-sm">{topic.title}</div>
+                  <div className="text-xs text-[var(--muted-foreground)]">
+                    {topic.description}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {topic.tags.slice(0, 3).map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-1 text-xs bg-fuchsia-500/20 text-fuchsia-300 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                    <span className="capitalize">{topic.difficulty}</span>
+                    <span>{topic.estimatedTime}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-cyan-400">Platforms:</span>
+                    <span>{topic.platforms.join(", ")}</span>
+                  </div>
+                  {topic.source && (
+                    <div className="text-xs text-cyan-400">
+                      Powered by {topic.source}
+                    </div>
+                  )}
+                </div>
               </motion.div>
             ))}
           </div>
