@@ -126,6 +126,10 @@
     font-feature-settings: "liga" 1, "kern" 1;
     text-rendering: optimizeLegibility;
   }
+  p, .prose p, .text-body {
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.6;
+  }
   h1,
   h2,
   h3 {
