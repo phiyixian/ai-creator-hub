@@ -85,6 +85,8 @@ export default function ReleasePage() {
     setIsPublishing(true);
     const results: Record<string, { ok: boolean; url?: string; message?: string }> = {};
     const base = finalText.trim();
+    const activeProject = projects.find((p) => p.id === selectedProjectId) || null;
+    const mediaUrl = activeProject?.contentUrl || "";
     for (const p of platformsToPost) {
       const preview = buildPlatformPreview(p, base);
       if (p === "X") {
@@ -95,8 +97,46 @@ export default function ReleasePage() {
         } catch (e: any) {
           results[p] = { ok: false, message: e?.message || "Failed" };
         }
-      } else {
-        results[p] = { ok: false, message: "Not yet implemented" };
+      } else if (p === "LinkedIn") {
+        try {
+          const r = await fetch("/api/publish/linkedin", { method: "POST", body: JSON.stringify({ text: preview }) });
+          const j = await r.json();
+          results[p] = { ok: !!j.ok, url: j.id ? `https://www.linkedin.com/feed/update/${j.id}` : undefined, message: j.message };
+        } catch (e: any) {
+          results[p] = { ok: false, message: e?.message || "Failed" };
+        }
+      } else if (p === "Instagram") {
+        try {
+          if (!mediaUrl) {
+            results[p] = { ok: false, message: "No image/video URL on selected project" };
+          } else {
+            const r = await fetch("/api/publish/instagram", { method: "POST", body: JSON.stringify({ caption: preview, imageUrl: mediaUrl }) });
+            const j = await r.json();
+            results[p] = { ok: !!j.ok, message: j.message };
+          }
+        } catch (e: any) {
+          results[p] = { ok: false, message: e?.message || "Failed" };
+        }
+      } else if (p === "YouTube") {
+        try {
+          if (!mediaUrl) {
+            results[p] = { ok: false, message: "No video URL on selected project" };
+          } else {
+            const r = await fetch("/api/publish/youtube", { method: "POST", body: JSON.stringify({ title: base.slice(0, 80), description: base, videoUrl: mediaUrl }) });
+            const j = await r.json();
+            results[p] = { ok: !!j.ok, url: j.url, message: j.message };
+          }
+        } catch (e: any) {
+          results[p] = { ok: false, message: e?.message || "Failed" };
+        }
+      } else if (p === "TikTok") {
+        try {
+          const r = await fetch("/api/publish/tiktok", { method: "POST", body: JSON.stringify({ caption: preview, videoUrl: mediaUrl }) });
+          const j = await r.json();
+          results[p] = { ok: !!j.ok, message: j.message };
+        } catch (e: any) {
+          results[p] = { ok: false, message: e?.message || "Failed" };
+        }
       }
     }
     setIsPublishing(false);
