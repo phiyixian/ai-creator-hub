@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const { caption, imageUrl } = await req.json().catch(() => ({ caption: "", imageUrl: "" }));
   if (!imageUrl) return new Response(JSON.stringify({ error: "Missing imageUrl" }), { status: 400 });
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
   const session = sessionToken ? getSessionByToken(sessionToken) : null;
   const userId = session && Date.now() < session.expiresAt ? session.userId : null;

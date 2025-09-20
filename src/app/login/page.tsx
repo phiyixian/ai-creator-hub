@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -39,6 +39,14 @@ export default function LoginPage() {
         <a className="px-3 py-2 btn-gradient w-full inline-flex justify-center" href={cognitoHref}>Continue with Cognito</a>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="max-w-md mx-auto p-6">Loading…</div>}>
+      <LoginInner />
+    </Suspense>
   );
 }
 

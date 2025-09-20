@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 // TikTok requires a full OAuth and upload session workflow; we stub with a placeholder.
 export async function POST(req: NextRequest) {
   const { caption, videoUrl } = await req.json().catch(() => ({ caption: "", videoUrl: "" }));
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
   const session = sessionToken ? getSessionByToken(sessionToken) : null;
   const userId = session && Date.now() < session.expiresAt ? session.userId : null;

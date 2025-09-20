@@ -11,14 +11,14 @@ export function createBedrockClient(options: BedrockOptions = {}) {
   return client;
 }
 
-export async function invokeClaude(messages: Array<{ role: string; content: string }>, options: BedrockOptions = {}) {
+export async function invokeClaude(messages: Array<{ role: "user" | "assistant"; content: string }>, options: BedrockOptions = {}) {
   const client = createBedrockClient(options);
   const modelId = options.modelId || process.env.BEDROCK_MODEL_ID || "amazon.nova-pro-v1:0";
 
   const converseMessages = (messages || []).map((m) => ({
-    role: m.role === "assistant" ? "assistant" : "user",
-    content: [{ text: String(m.content ?? "") }],
-  }));
+    role: (m.role === "assistant" ? "assistant" : "user") as any,
+    content: [{ text: String(m.content ?? "") } as any],
+  })) as any;
 
   const res = await client.send(new ConverseCommand({
     modelId,
@@ -69,20 +69,20 @@ export async function analyzeMediaFromUrl(mediaUrl: string, options: BedrockOpti
   const command = new ConverseCommand({
     modelId,
     messages: [
-      { role: "user", content: [{ text: system }] },
+      { role: "user", content: [{ text: system } as any] } as any,
       {
         role: "user",
         content: [
-          { text: userText },
+          { text: userText } as any,
           {
             image: {
               format,
               source: { bytes },
             } as any,
-          },
+          } as any,
         ],
-      },
-    ],
+      } as any,
+    ] as any,
     inferenceConfig: {
       maxTokens: 700,
       temperature: 0.3,

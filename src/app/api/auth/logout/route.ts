@@ -4,7 +4,7 @@ import { deleteSessionByToken } from "@/lib/db";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get("session")?.value;
   if (token) {
     try {

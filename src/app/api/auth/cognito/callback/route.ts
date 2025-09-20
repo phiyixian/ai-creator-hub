@@ -32,8 +32,11 @@ export async function GET(req: NextRequest) {
   );
 
   const idToken = tokens.claims();
-  const email = (idToken.email as string) || "";
-  const name = ((idToken.name as string) || idToken["cognito:username"] as string) || null;
+  if (!idToken) {
+    return new Response("No ID token returned", { status: 400 });
+  }
+  const email = ((idToken as any).email as string) || "";
+  const name = (((idToken as any).name as string) || (idToken as any)["cognito:username"] as string) || null;
   if (!email) {
     return new Response("No email in ID token", { status: 400 });
   }

@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   const { title, description, videoUrl } = await req.json().catch(() => ({ title: "", description: "", videoUrl: "" }));
   if (!videoUrl) return new Response(JSON.stringify({ error: "Missing videoUrl" }), { status: 400 });
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
   const session = sessionToken ? getSessionByToken(sessionToken) : null;
   const userId = session && Date.now() < session.expiresAt ? session.userId : null;

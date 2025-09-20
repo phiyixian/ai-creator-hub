@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const { codeVerifier, codeChallenge } = await generatePkce();
   const returnTo = req.nextUrl.searchParams.get("returnTo");
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.set("oidc_nonce", serializeOidcNonceCookie({ state, codeVerifier, returnTo }), {
     httpOnly: true,
     sameSite: "lax",

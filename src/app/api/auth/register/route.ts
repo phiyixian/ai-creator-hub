@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const passwordHash = await hashPassword(password);
   const user = createUser(String(email).toLowerCase(), name || null, passwordHash);
   const session = createUserSession(user.id);
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.set("session", session.token, {
     httpOnly: true,
     sameSite: "lax",

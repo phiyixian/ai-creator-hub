@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const { text } = await req.json().catch(() => ({ text: "" }));
   if (!text) return new Response(JSON.stringify({ error: "Missing text" }), { status: 400 });
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
   const session = sessionToken ? getSessionByToken(sessionToken) : null;
   const userId = session && Date.now() < session.expiresAt ? session.userId : null;
