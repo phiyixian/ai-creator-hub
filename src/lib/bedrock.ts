@@ -1,4 +1,4 @@
-import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 
 export type BedrockOptions = {
   region?: string;
@@ -6,27 +6,35 @@ export type BedrockOptions = {
 };
 
 export function createBedrockClient(options: BedrockOptions = {}) {
-  const region = options.region || process.env.AWS_REGION || "us-east-1";
+  const region = options.region || process.env.AWS_REGION || "ap-southeast-1";
   const client = new BedrockRuntimeClient({ region });
   return client;
 }
 
 export async function invokeClaude(messages: Array<{ role: string; content: string }>, options: BedrockOptions = {}) {
   const client = createBedrockClient(options);
-  const modelId = options.modelId || process.env.BEDROCK_MODEL_ID || "anthropic.claude-3-5-sonnet-20241022-v2:0";
-  const body = {
-    anthropic_version: "bedrock-2023-05-31",
-    max_tokens: 800,
-    messages,
-  };
-  const res = await client.send(new InvokeModelCommand({
-    contentType: "application/json",
-    accept: "application/json",
-    modelId,
-    body: JSON.stringify(body),
+  const modelId = options.modelId || process.env.BEDROCK_MODEL_ID || "amazon.nova-pro-v1:0";
+
+  const converseMessages = (messages || []).map((m) => ({
+    role: m.role === "assistant" ? "assistant" : "user",
+    content: [{ text: String(m.content ?? "") }],
   }));
-  const json = JSON.parse(Buffer.from(res.body!).toString());
-  const text = json?.content?.[0]?.text || json?.content?.[0]?.content?.[0]?.text || "";
-  return String(text || "");
+
+  const res = await client.send(new ConverseCommand({
+    modelId,
+    messages: converseMessages,
+    inferenceConfig: {
+      maxTokens: 800,
+      temperature: 0.3,
+      topP: 0.9,
+    },
+  }));
+
+  const parts = res?.output?.message?.content || [];
+  const combined = parts
+    .map((p: any) => (typeof p?.text === "string" ? p.text : ""))
+    .filter(Boolean)
+    .join("\n");
+  return String(combined || "");
 }
 
