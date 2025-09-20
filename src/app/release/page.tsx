@@ -152,7 +152,7 @@ export default function ReleasePage() {
       {/* Project selector & uploader */}
       <div className="rounded-xl border overflow-hidden">
         <div className="p-4 border-b font-medium flex items-center justify-between">
-          <div>Project</div>
+          <div className="text-base md:text-lg">Project</div>
           <button
             className="px-3 py-1.5 btn-soft"
             onClick={async () => {
@@ -212,8 +212,7 @@ export default function ReleasePage() {
         {/* Feedback */}
         <div className="rounded-xl border overflow-hidden lg:col-span-2">
           <div className="p-4 border-b flex items-center justify-between">
-            <div className="font-medium">Content feedback</div>
-            <button className="px-3 py-1.5 btn-soft">Connect AWS</button>
+            <div className="font-medium text-base md:text-lg">Content feedback</div>
           </div>
           <div className="p-4 space-y-3">
             <textarea
@@ -231,7 +230,7 @@ export default function ReleasePage() {
 
         {/* Best time */}
         <div className="rounded-xl border overflow-hidden">
-          <div className="p-4 border-b font-medium">Best time to release</div>
+          <div className="p-4 border-b font-medium text-base md:text-lg">Best time to release</div>
           <div className="p-4 space-y-3">
             <label className="text-sm">
               Timezone
@@ -258,7 +257,7 @@ export default function ReleasePage() {
       {/* Captions and multi-platform publish */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="rounded-xl border overflow-hidden lg:col-span-2">
-          <div className="p-4 border-b font-medium">AI Caption writing</div>
+          <div className="p-4 border-b font-medium text-base md:text-lg">AI Caption writing</div>
           <div className="p-4 space-y-3">
             <input
               value={captionPrompt}
@@ -268,7 +267,6 @@ export default function ReleasePage() {
             />
             <div className="flex gap-2">
               <button onClick={generateCaptions} className="px-3 py-2 btn-gradient">Generate captions</button>
-              <button className="px-3 py-2 btn-soft">Connect AWS</button>
             </div>
             {!!captions.length && (
               <ul className="list-disc pl-5 text-sm space-y-1">
@@ -281,7 +279,7 @@ export default function ReleasePage() {
         </div>
 
         <div className="rounded-xl border overflow-hidden">
-          <div className="p-4 border-b font-medium">Multi-platform</div>
+          <div className="p-4 border-b font-medium text-base md:text-lg">Multi-platform</div>
           <div className="p-4 space-y-3">
             <div className="grid grid-cols-2 gap-2 text-sm">
               {platforms.map((p) => (
