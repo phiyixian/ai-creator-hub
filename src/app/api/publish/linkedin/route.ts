@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { cookies } from "next/headers";
+import { getSessionByToken, getSocialCredentials } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -6,10 +8,16 @@ export async function POST(req: NextRequest) {
   const { text } = await req.json().catch(() => ({ text: "" }));
   if (!text) return new Response(JSON.stringify({ error: "Missing text" }), { status: 400 });
 
-  const token = process.env.LINKEDIN_ACCESS_TOKEN;
-  const urn = process.env.LINKEDIN_MEMBER_URN; // e.g. urn:li:person:XXXXXXXX
+  const cookieStore = cookies();
+  const sessionToken = cookieStore.get("session")?.value;
+  const session = sessionToken ? getSessionByToken(sessionToken) : null;
+  const userId = session && Date.now() < session.expiresAt ? session.userId : null;
+  const creds = userId ? getSocialCredentials(userId) : [];
+  const li = creds.find((c) => c.platform === "linkedin")?.data || {};
+  const token = li.accessToken || process.env.LINKEDIN_ACCESS_TOKEN;
+  const urn = li.memberUrn || process.env.LINKEDIN_MEMBER_URN; // e.g. urn:li:person:XXXXXXXX
   if (!token || !urn) {
-    return Response.json({ ok: false, message: "Set LINKEDIN_ACCESS_TOKEN and LINKEDIN_MEMBER_URN" }, { status: 200 });
+    return Response.json({ ok: false, message: "Missing LinkedIn credentials. Provide via profile settings." }, { status: 200 });
   }
 
   try {

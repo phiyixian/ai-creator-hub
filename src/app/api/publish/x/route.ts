@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { cookies } from "next/headers";
+import { getSessionByToken, getSocialCredentials } from "@/lib/db";
 import { TwitterApi } from "twitter-api-v2";
 
 export const runtime = "nodejs";
@@ -7,11 +9,17 @@ export async function POST(req: NextRequest) {
   const { text } = await req.json().catch(() => ({ text: "" }));
   if (!text) return new Response(JSON.stringify({ error: "Missing text" }), { status: 400 });
 
-  const bearerToken = process.env.X_BEARER_TOKEN || process.env.TWITTER_BEARER_TOKEN;
-  const appKey = process.env.X_APP_KEY || process.env.TWITTER_APP_KEY;
-  const appSecret = process.env.X_APP_SECRET || process.env.TWITTER_APP_SECRET;
-  const accessToken = process.env.X_ACCESS_TOKEN || process.env.TWITTER_ACCESS_TOKEN;
-  const accessSecret = process.env.X_ACCESS_SECRET || process.env.TWITTER_ACCESS_SECRET;
+  const cookieStore = cookies();
+  const sessionToken = cookieStore.get("session")?.value;
+  const session = sessionToken ? getSessionByToken(sessionToken) : null;
+  const userId = session && Date.now() < session.expiresAt ? session.userId : null;
+  const creds = userId ? getSocialCredentials(userId) : [];
+  const x = creds.find((c) => c.platform === "x")?.data || {};
+  const bearerToken = x.bearerToken || process.env.X_BEARER_TOKEN || process.env.TWITTER_BEARER_TOKEN;
+  const appKey = x.appKey || process.env.X_APP_KEY || process.env.TWITTER_APP_KEY;
+  const appSecret = x.appSecret || process.env.X_APP_SECRET || process.env.TWITTER_APP_SECRET;
+  const accessToken = x.accessToken || process.env.X_ACCESS_TOKEN || process.env.TWITTER_ACCESS_TOKEN;
+  const accessSecret = x.accessSecret || process.env.X_ACCESS_SECRET || process.env.TWITTER_ACCESS_SECRET;
 
   try {
     if (appKey && appSecret && accessToken && accessSecret) {
