@@ -32,7 +32,10 @@ export default function ReleasePage() {
   }, []);
 
   async function getFeedback() {
-    const res = await fetch("/api/ai/feedback", { method: "POST", body: JSON.stringify({ content: feedbackInput }) });
+    const activeProject = projects.find((p) => p.id === selectedProjectId) || null;
+    const mediaUrl = activeProject?.contentUrl || "";
+    const payload = mediaUrl ? { mediaUrl } : { content: feedbackInput };
+    const res = await fetch("/api/ai/feedback", { method: "POST", body: JSON.stringify(payload) });
     const json = await res.json();
     setFeedback(String(json.feedback || ""));
   }
@@ -215,12 +218,14 @@ export default function ReleasePage() {
             <div className="font-medium text-base md:text-lg">Content feedback</div>
           </div>
           <div className="p-4 space-y-3">
-            <textarea
-              value={feedbackInput}
-              onChange={(e) => setFeedbackInput(e.target.value)}
-              placeholder="Paste your script, caption, or summary for feedback"
-              className="w-full min-h-32 input-soft"
-            />
+            {!projects.find((p) => p.id === selectedProjectId)?.contentUrl && (
+              <textarea
+                value={feedbackInput}
+                onChange={(e) => setFeedbackInput(e.target.value)}
+                placeholder="Paste your script or summary for feedback (or upload/select a project to analyze media)"
+                className="w-full min-h-32 input-soft"
+              />
+            )}
             <button onClick={getFeedback} className="px-3 py-2 btn-gradient">Get AI feedback</button>
             {feedback && (
               <pre className="whitespace-pre-wrap text-sm bg-[var(--secondary)] p-3 rounded-md border">{feedback}</pre>
