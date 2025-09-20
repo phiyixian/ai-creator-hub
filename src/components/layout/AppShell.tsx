@@ -112,10 +112,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <div className="text-sm md:text-base text-[var(--muted-foreground)]">
             Empowering digital creators with AWS AI
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Link className="underline decoration-dotted" href="/profile">
-              Profile
-            </Link>
+          <div className="flex items-center gap-3 text-sm">
+            <Link className="underline decoration-dotted" href="/profile">Profile</Link>
+            <a className="underline decoration-dotted" href="/api/auth/logout">Logout</a>
           </div>
         </header>
         <main className="flex-1 px-4 py-6 lg:p-8">
