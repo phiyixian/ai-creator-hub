@@ -22,26 +22,3 @@ export async function processVideo(file: File, trim: { start: number; end: numbe
     throw error;
   }
 }
-
-export async function generateCaptions(file: File) {
-  const formData = new FormData();
-  formData.append("video", file);
-
-  try {
-    const response = await fetch("/api/ai/video-captions", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Caption generation failed: ${text}`);
-    }
-
-    const data = await response.json();
-    return data.captions;
-  } catch (error) {
-    console.error("Error generating captions:", error);
-    throw error;
-  }
-}

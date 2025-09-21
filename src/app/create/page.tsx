@@ -2,7 +2,7 @@
 "use client";
 import { useState } from "react";
 import FileUploader from "@/components/ui/FileUploader";
-import { processVideo, generateCaptions } from "@/lib/video";
+import { processVideo } from "@/lib/video";
 
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("cinematic neon city at night");
@@ -29,19 +29,6 @@ export default function CreatePage() {
       } catch (error) {
         console.error(error);
         alert("Failed to trim video.");
-      }
-    }
-  };
-
-  const handleAddCaptions = async () => {
-    if (videoFile) {
-      try {
-        const text = await generateCaptions(videoFile);
-        setCaptions(text);
-        alert("Captions generated!");
-      } catch (error) {
-        console.error(error);
-        alert("Failed to generate captions.");
       }
     }
   };
@@ -167,7 +154,6 @@ export default function CreatePage() {
 
             <div className="flex gap-2">
               <button onClick={handleApplyTrim} className="px-3 py-2 btn-soft">Apply Trim</button>
-              <button onClick={handleAddCaptions} className="px-3 py-2 btn-soft">Add Captions</button>
               <button onClick={handleExport} className="px-3 py-2 btn-soft">Export</button>
             </div>
             {captions && (
