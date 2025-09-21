@@ -261,9 +261,9 @@ export default function InspirePage() {
           >
             {loading ? "Generating..." : "AI Topic Suggester"}
           </button>
-          <button className="px-4 py-2 btn-soft text-sm md:text-base">
+          {/* <button className="px-4 py-2 btn-soft text-sm md:text-base">
             Connect AWS
-          </button>
+          </button> */}
         </div>
         {error && (
           <div className="mt-4 p-3 rounded-lg border border-red-400/30 bg-red-400/10 text-red-400 text-sm">

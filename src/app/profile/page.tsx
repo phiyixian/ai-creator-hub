@@ -1,33 +1,30 @@
 "use client";
 import { useEffect, useState } from "react";
 
-type PlatformCred = { platform: string; data: any };
-
-type ProfilePayload = {
-  user: {
-    id: number | string;
-    email: string;
-    name: string | null;
-    picture?: string | null;
-    bio?: string;
-    persona?: string;
-  };
-  credentials: PlatformCred[];
+type User = {
+  userId: string;
+  email: string;
+  name?: string | null;
+  picture?: string | null;
+  provider?: "cognito";
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt: string;
 };
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // user fields (bound to inputs)
+  // profile fields (bound to inputs)
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("");        // read-only (from user)
+  const [picture, setPicture] = useState<string>("");
+
+  // local-only for now (not yet persisted in API)
   const [bio, setBio] = useState("");
   const [persona, setPersona] = useState("videographer");
-  const [picture, setPicture] = useState<string | null>(null);
 
-  // linked platforms (from /api/profile or /api/profile/credentials)
-  const [platforms, setPlatforms] = useState<PlatformCred[]>([]);
   const [status, setStatus] = useState("");
 
   async function loadProfile() {
@@ -40,45 +37,39 @@ export default function ProfilePage() {
         setLoading(false);
         return;
       }
-      const data: ProfilePayload = await res.json();
-      setName(data.user.name || "");
-      setEmail(data.user.email || "");
-      setBio(data.user.bio || "");
-      setPersona(data.user.persona || "videographer");
-      setPicture(data.user.picture || null);
-      setPlatforms(data.credentials || []);
-    } catch (e) {
+      const data: { user: User } = await res.json();
+
+      setName(data.user.name ?? "");
+      setEmail(data.user.email ?? "");
+      setPicture(data.user.picture ?? "");
+      // bio/persona are local UI fields for now
+    } catch {
       setAuthError("Failed to load profile");
     } finally {
       setLoading(false);
     }
   }
 
-  async function reloadCredentials() {
-    try {
-      const res = await fetch("/api/profile/credentials", { cache: "no-store" });
-      if (res.ok) {
-        const json = await res.json();
-        setPlatforms(json.credentials || []);
-      }
-    } catch {
-      /* ignore for now */
-    }
-  }
-
-  async function save(platform: string, data: any) {
-    setStatus("Saving...");
+  async function saveProfile() {
+    setStatus("Saving…");
     try {
       const res = await fetch("/api/profile/credentials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ platform, data }),
+        // API currently supports name and picture updates
+        body: JSON.stringify({
+          name: name || null,
+          picture: picture || null,
+        }),
       });
+
       if (res.ok) {
         setStatus("Saved");
-        reloadCredentials();
+        // reload to reflect updated timestamps, etc.
+        loadProfile();
       } else {
-        setStatus("Failed");
+        const err = await res.json().catch(() => ({}));
+        setStatus(err?.error ? `Failed: ${err.error}` : "Failed");
       }
     } catch {
       setStatus("Failed");
@@ -114,28 +105,60 @@ export default function ProfilePage() {
       <div className="rounded-xl border overflow-hidden">
         <div className="p-4 border-b font-medium text-base md:text-lg flex items-center gap-3">
           {picture ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={picture} alt="avatar" className="w-8 h-8 rounded-full" />
           ) : (
             <div className="w-8 h-8 rounded-full bg-[var(--muted)]" />
           )}
           Creator profile
         </div>
+
         <div className="p-4 grid gap-4 sm:grid-cols-2">
           <label className="text-sm">
             Name
-            <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full input-soft" />
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 w-full input-soft px-3 py-2"
+            />
           </label>
+
           <label className="text-sm">
             Email
-            <input value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full input-soft" />
+            <input
+              value={email}
+              readOnly
+              className="mt-1 w-full input-soft px-3 py-2 opacity-80 cursor-not-allowed"
+            />
           </label>
+
           <label className="text-sm sm:col-span-2">
-            Bio
-            <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="mt-1 w-full min-h-24 input-soft" />
+            Picture URL
+            <input
+              value={picture}
+              onChange={(e) => setPicture(e.target.value)}
+              placeholder="https://…"
+              className="mt-1 w-full input-soft px-3 py-2"
+            />
           </label>
+
+          {/* Local-only fields (not yet persisted) */}
+          <label className="text-sm sm:col-span-2">
+            Bio (local)
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="mt-1 w-full min-h-24 input-soft px-3 py-2"
+            />
+          </label>
+
           <label className="text-sm">
-            Persona
-            <select value={persona} onChange={(e) => setPersona(e.target.value)} className="mt-1 w-full input-soft">
+            Persona (local)
+            <select
+              value={persona}
+              onChange={(e) => setPersona(e.target.value)}
+              className="mt-1 w-full input-soft px-3 py-2"
+            >
               <option value="videographer">Videographer</option>
               <option value="photographer">Photographer</option>
               <option value="educator">Educator</option>
@@ -143,22 +166,22 @@ export default function ProfilePage() {
               <option value="musician">Musician</option>
             </select>
           </label>
+
+          <div className="sm:col-span-2">
+            <button onClick={saveProfile} className="px-4 py-2 btn-gradient">
+              Save profile
+            </button>
+            {!!status && (
+              <span className="ml-3 text-xs text-[var(--muted-foreground)]">{status}</span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Linked platforms */}
+      {/* Social platform connections (UI only for now) */}
       <div className="rounded-xl border overflow-hidden">
-        <div className="p-4 border-b font-medium text-base md:text-lg flex items-center justify-between">
-          <span>Social platform connections</span>
-          {!!platforms.length && (
-            <span className="text-xs text-[var(--muted-foreground)]">
-              Linked: {platforms.map((p) => p.platform).join(", ")}
-            </span>
-          )}
-        </div>
-
+        <div className="p-4 border-b font-medium text-base md:text-lg">Social platform connections</div>
         <div className="p-4 grid gap-6 sm:grid-cols-2">
-          {/* LinkedIn */}
           <div className="space-y-2">
             <div className="font-medium">LinkedIn</div>
             <button
@@ -168,12 +191,8 @@ export default function ProfilePage() {
               Link LinkedIn
             </button>
             <div className="text-[var(--muted-foreground)] text-xs">Used for posting to LinkedIn.</div>
-            {platforms.find((p) => p.platform === "linkedin") && (
-              <div className="text-xs text-cyan-400">Linked ✓</div>
-            )}
           </div>
 
-          {/* X/Twitter */}
           <div className="space-y-2">
             <div className="font-medium">X (Twitter)</div>
             <button
@@ -183,12 +202,8 @@ export default function ProfilePage() {
               Link X
             </button>
             <div className="text-[var(--muted-foreground)] text-xs">Used for posting to X.</div>
-            {platforms.find((p) => p.platform === "x" || p.platform === "twitter") && (
-              <div className="text-xs text-cyan-400">Linked ✓</div>
-            )}
           </div>
 
-          {/* Instagram */}
           <div className="space-y-2">
             <div className="font-medium">Instagram</div>
             <button
@@ -198,12 +213,8 @@ export default function ProfilePage() {
               Link Instagram
             </button>
             <div className="text-[var(--muted-foreground)] text-xs">Used for posting to Instagram.</div>
-            {platforms.find((p) => p.platform === "instagram") && (
-              <div className="text-xs text-cyan-400">Linked ✓</div>
-            )}
           </div>
 
-          {/* YouTube */}
           <div className="space-y-2">
             <div className="font-medium">YouTube</div>
             <button
@@ -213,12 +224,8 @@ export default function ProfilePage() {
               Link YouTube
             </button>
             <div className="text-[var(--muted-foreground)] text-xs">Used for uploading to YouTube.</div>
-            {platforms.find((p) => p.platform === "youtube") && (
-              <div className="text-xs text-cyan-400">Linked ✓</div>
-            )}
           </div>
 
-          {/* TikTok */}
           <div className="space-y-2">
             <div className="font-medium">TikTok</div>
             <button
@@ -227,14 +234,11 @@ export default function ProfilePage() {
             >
               Link TikTok
             </button>
-            <div className="text-[var(--muted-foreground)] text-xs">TikTok requires OAuth upload sessions.</div>
-            {platforms.find((p) => p.platform === "tiktok") && (
-              <div className="text-xs text-cyan-400">Linked ✓</div>
-            )}
+            <div className="text-[var(--muted-foreground)] text-xs">
+              TikTok requires OAuth upload sessions.
+            </div>
           </div>
         </div>
-
-        <div className="p-4 text-xs text-[var(--muted-foreground)]">{status}</div>
       </div>
     </div>
   );
