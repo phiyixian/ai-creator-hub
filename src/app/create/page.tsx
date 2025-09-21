@@ -7,7 +7,6 @@ import { processVideo, generateCaptions } from "@/lib/video";
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("cinematic neon city at night");
   const [imgSeed, setImgSeed] = useState("city");
-  const [script, setScript] = useState("");
   const [trim, setTrim] = useState({ start: 0, end: 15 });
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -104,28 +103,6 @@ export default function CreatePage() {
     }
   }
 
-  async function generateScript() {
-    setScript("Generating script...");
-    try {
-      const response = await fetch("/api/ai/generate-script", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Failed to fetch script");
-      }
-
-      const data = await response.json();
-      setScript(data.script);
-    } catch (error) {
-      console.error("Error:", error);
-      setScript("Error generating script. Please try again.");
-    }
-  }
-
   return (
     <div className="space-y-8">
       <div className="grid gap-6 lg:grid-cols-2">
@@ -199,25 +176,6 @@ export default function CreatePage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border overflow-hidden">
-        <div className="p-4 border-b font-medium text-base md:text-lg">Script & Storyboard from Prompt</div>
-        <div className="p-4 space-y-3">
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="w-full min-h-24 input-soft"
-          />
-          <div className="flex gap-2">
-            <button onClick={generateScript} className="px-3 py-2 btn-gradient">
-              Generate Script
-            </button>
-          </div>
-          {script && (
-            <pre className="whitespace-pre-wrap text-sm bg-[var(--secondary)] p-3 rounded-md border">{script}</pre>
-          )}
         </div>
       </div>
     </div>
