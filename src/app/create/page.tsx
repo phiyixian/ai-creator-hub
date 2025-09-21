@@ -1,20 +1,130 @@
+// src/app/create/page.tsx
 "use client";
 import { useState } from "react";
+import FileUploader from "@/components/ui/FileUploader";
+import { processVideo, generateCaptions } from "@/lib/video";
 
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("cinematic neon city at night");
   const [imgSeed, setImgSeed] = useState("city");
   const [script, setScript] = useState("");
   const [trim, setTrim] = useState({ start: 0, end: 15 });
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [captions, setCaptions] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loadingImage, setLoadingImage] = useState(false);
 
-  function generateScript() {
-    const s = `Title: ${prompt}\n\nScene 1: Establishing shot of ${prompt}.\nScene 2: Close-up details.\nScene 3: Voiceover explains the story arc.\nScene 4: Call to action.`;
-    setScript(s);
+  const handleFileSelect = (file: File) => {
+    setVideoFile(file);
+    setVideoUrl(URL.createObjectURL(file));
+  };
+
+  const handleApplyTrim = async () => {
+    if (videoFile) {
+      try {
+        const processedBlob = await processVideo(videoFile, trim);
+        const newVideoUrl = URL.createObjectURL(processedBlob);
+        setVideoUrl(newVideoUrl);
+        alert("Video trimmed successfully!");
+      } catch (error) {
+        console.error(error);
+        alert("Failed to trim video.");
+      }
+    }
+  };
+
+  const handleAddCaptions = async () => {
+    if (videoFile) {
+      try {
+        const text = await generateCaptions(videoFile);
+        setCaptions(text);
+        alert("Captions generated!");
+      } catch (error) {
+        console.error(error);
+        alert("Failed to generate captions.");
+      }
+    }
+  };
+
+  const handleExport = () => {
+    if (videoUrl) {
+      const link = document.createElement("a");
+      link.href = videoUrl;
+      link.download = "edited_video.mp4";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  async function downloadImage() {
+    if (!imageUrl) {
+      alert("No image to download — please generate one first.");
+      return;
+    }
+    // fetch as blob then download to ensure CORS-safe download
+    try {
+      const res = await fetch(imageUrl);
+      const blob = await res.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "generated_image.jpg";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Download image failed:", err);
+      alert("Failed to download the image.");
+    }
   }
 
-  const imageUrl = `https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1600&auto=format&fit=crop&${encodeURIComponent(
-    imgSeed
-  )}`;
+  async function generateImage() {
+    setLoadingImage(true);
+    try {
+      const res = await fetch("/api/ai/unsplash", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || "Failed to fetch image");
+      }
+      const data = await res.json();
+      const url = data.url;
+      // optional: add some query params for fit/quality
+      setImageUrl(`${url}?w=1600&q=80&auto=format&fit=crop&sat=0.3&seed=${encodeURIComponent(prompt + Date.now())}`);
+      setImgSeed(prompt + Date.now());
+    } catch (error) {
+      console.error("Generate image error:", error);
+      alert("Failed to generate image.");
+    } finally {
+      setLoadingImage(false);
+    }
+  }
+
+  async function generateScript() {
+    setScript("Generating script...");
+    try {
+      const response = await fetch("/api/ai/generate-script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Failed to fetch script");
+      }
+
+      const data = await response.json();
+      setScript(data.script);
+    } catch (error) {
+      console.error("Error:", error);
+      setScript("Error generating script. Please try again.");
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -31,21 +141,32 @@ export default function CreatePage() {
               className="input-soft w-full"
             />
             <div className="aspect-video rounded-lg overflow-hidden border">
-              <img src={imageUrl} alt="generated" className="w-full h-full object-cover" />
+              {imageUrl ? (
+                <img src={imageUrl} alt="generated" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full grid place-items-center text-sm text-[var(--muted-foreground)]">
+                  No image yet — click Generate
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setImgSeed(prompt)} className="px-3 py-2 btn-gradient">Generate</button>
-              <button className="px-3 py-2 btn-soft">Download</button>
+              <button onClick={generateImage} className="px-3 py-2 btn-gradient" disabled={loadingImage}>
+                {loadingImage ? "Generating..." : "Generate"}
+              </button>
+              <button onClick={downloadImage} className="px-3 py-2 btn-soft">Download</button>
             </div>
           </div>
         </div>
 
         <div className="rounded-xl border overflow-hidden">
-          <div className="p-4 border-b font-medium text-base md:text-lg">Video Editing (Placeholder)</div>
+          <div className="p-4 border-b font-medium text-base md:text-lg">Video Editing</div>
           <div className="p-4 space-y-3">
-            <div className="aspect-video rounded-lg overflow-hidden border bg-[var(--secondary)] grid place-items-center text-sm text-[var(--muted-foreground)]">
-              Drop or select a clip
-            </div>
+            {videoUrl ? (
+              <video src={videoUrl} controls className="aspect-video rounded-lg w-full" />
+            ) : (
+              <FileUploader onFileSelect={handleFileSelect} />
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <label className="text-sm">
                 Trim start (s)
@@ -66,11 +187,17 @@ export default function CreatePage() {
                 />
               </label>
             </div>
+
             <div className="flex gap-2">
-              <button className="px-3 py-2 btn-soft">Apply Trim</button>
-              <button className="px-3 py-2 btn-soft">Add Captions</button>
-              <button className="px-3 py-2 btn-soft">Export</button>
+              <button onClick={handleApplyTrim} className="px-3 py-2 btn-soft">Apply Trim</button>
+              <button onClick={handleAddCaptions} className="px-3 py-2 btn-soft">Add Captions</button>
+              <button onClick={handleExport} className="px-3 py-2 btn-soft">Export</button>
             </div>
+            {captions && (
+              <div className="text-sm text-[var(--muted-foreground)] p-2 border rounded">
+                <strong>Captions:</strong> {captions}
+              </div>
+            )}
           </div>
         </div>
       </div>
