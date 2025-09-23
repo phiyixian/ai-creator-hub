@@ -16,18 +16,37 @@ type PostAnalytics = {
   postedAt: string; // ISO date string
 };
 
+// ✅ Modified fetchLambdaAnalytics
 async function fetchLambdaAnalytics(platform: string): Promise<PostAnalytics[]> {
-  const res = await fetch(
-    `https://uwesp89f8b.execute-api.ap-southeast-1.amazonaws.com/socialstage/social/${platform}`,
-    {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
+  if (platform === "all") {
+    // Fetch all platforms in parallel
+    const platforms = ["instagram", "youtube", "tiktok"];
+    const results = await Promise.all(
+      platforms.map(async (p) => {
+        const res = await fetch(
+          `https://uwesp89f8b.execute-api.ap-southeast-1.amazonaws.com/socialstage/social/${p}`,
+          { method: "GET", headers: { "Content-Type": "application/json" } }
+        );
+        if (!res.ok) {
+          console.error(`❌ Failed to fetch ${p}`);
+          return [];
+        }
+        return res.json();
+      })
+    );
+    // Merge all data into one array
+    return results.flat();
+  } else {
+    // Fetch single platform
+    const res = await fetch(
+      `https://uwesp89f8b.execute-api.ap-southeast-1.amazonaws.com/socialstage/social/${platform}`,
+      { method: "GET", headers: { "Content-Type": "application/json" } }
+    );
+    if (!res.ok) {
+      throw new Error("Failed to fetch from Lambda");
     }
-  );
-  if (!res.ok) {
-    throw new Error("Failed to fetch from Lambda");
+    return res.json();
   }
-  return res.json();
 }
 
 
@@ -186,14 +205,14 @@ export default function TrackPage() {
           </div>
 
           <label>
-          Platform:{" "}
-          <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
-            <option value="instagram">Instagram</option>
-            <option value="youtube">YouTube</option>
-            <option value="tiktok">TikTok</option>
-          </select>
-        </label>
-
+            Platform:{" "}
+            <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
+              <option value="all">All</option>
+              <option value="instagram">Instagram</option>
+              <option value="youtube">YouTube</option>
+              <option value="tiktok">TikTok</option>
+            </select>
+          </label>
 
           {/* Growth Trend Chart with Metric Selector */}
           <div style={{ border: "1px solid #eee", borderRadius: 8, padding: 16, marginBottom: 24 }}>
